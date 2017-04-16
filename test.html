@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>BYOS</title>
+		<style>
+			body { 
+				margin: 0;
+				background-color:#000;
+				background-image: url("PandanHM.jpg");
+			}
+			canvas { 
+				width: 100%; 
+				height: 100% 
+			}
+			button {
+				background-color:#000;
+				border: 0px;
+			}
+			
+			#info {
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+				color:#00f0f0;
+			}
+			#map {
+				position:absolute;
+				top: 50px;
+				left: 70%;
+				min-width: 200px;
+				width: 25%;
+				min-height: 200px;
+				z-index: 1;
+				height: 50%;
+				border: 10px solid #38272C;
+			}			
+			#glRender {
+				position:absolute;
+				top: 50px;
+				left: 5%;
+				min-width: 200px;
+				width: 60%;
+				min-height: 200px;
+				z-index: 1;
+				height: 50%;
+				border: 10px solid #38272C;
+			}			
+			#controles {
+				position:absolute;
+				top: 60px;
+				left: 6%;
+				min-width: 100px;
+				width: 100px;
+				min-height: 400px;
+				z-index: 2;
+				height: 400px;
+				opacity: 0.7;
+			}			
+			#imgBtnCtrl {
+				width: 100%;
+				height: auto;
+				opacity: 0.2;
+			}			
+			#imgBtnCtrl:focus {
+				outline: none;
+				box-shadow: none;
+			}			
+		</style>
+	</head>
+	<body>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDd8ohSW6WXH9M4U2bMFVCRGVP92dBK_tY&callback=initMap" async defer></script>
+		<script>
+			var dataDB = [
+			{"_id":"58cd11e31af0c500010c5e03","idTrip":2,"title":"Tour de l'île","desc":"Départ à Papeete",
+			"Lon":-149.56597024574876,"Lat":-17.537409100612244,"mediaName":"tour.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:54:27.982Z","created":"2017-03-18T10:54:27.981Z"},
+			{"_id":"58cd12341af0c500010c5e04","idTrip":2,"desc":"Le marché de Papeete",
+			"Lon":-149.56730598583817,"Lat":-17.538964078900914,"mediaName":"tour0.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:55:48.963Z","created":"2017-03-18T10:55:48.963Z"},
+			{"_id":"58cd12791af0c500010c5e06","idTrip":2,"desc":"Le jardin de Paofai",
+			"Lon":-149.5741885341704,"Lat":-17.542145604913344,"mediaName":"tour1.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:56:57.399Z","created":"2017-03-18T10:56:57.399Z"},
+			{"_id":"58cd12b21af0c500010c5e07","idTrip":2,"desc":"L'Intercontinental de Faaa",
+			"Lon":-149.6182107925415,"Lat":-17.571395633448873,"mediaName":"tour2.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:57:54.723Z","created":"2017-03-18T10:57:54.723Z"},
+			{"_id":"58cd12d41af0c500010c5e08","idTrip":2,"desc":"Le bassin de l'Intercontinental de Faaa",
+			"Lon":-149.61895443499088,"Lat":-17.572418455652848,"mediaName":"tour3.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:58:28.340Z","created":"2017-03-18T10:58:28.340Z"},
+			{"_id":"58cd13011af0c500010c5e09","idTrip":2,"desc":"Vue du lagon en paddle",
+			"Lon":-149.6208641678095,"Lat":-17.572561650212588,"mediaName":"tour4.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T10:59:13.983Z","created":"2017-03-18T10:59:13.983Z"},
+			{"_id":"58cd13371af0c500010c5e0a","idTrip":2,"desc":"Vue de Moorea de la marina Taina",
+			"Lon":-149.61655117571354,"Lat":-17.58397594008303,"mediaName":"tour5.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:00:07.125Z","created":"2017-03-18T11:00:07.125Z"},
+			{"_id":"58cd13661af0c500010c5e0b","idTrip":2,"desc":"L'hôtel Le Manava",
+			"Lon":-149.61299657821655,"Lat":-17.602609541981234,"mediaName":"tour6.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:00:54.728Z","created":"2017-03-18T11:00:54.728Z"},
+			{"_id":"58cd13901af0c500010c5e0c","idTrip":2,"desc":"L'hôtel Le Meridien",
+			"Lon":-149.61119413375854,"Lat":-17.636885443181818,"mediaName":"tour7.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:01:36.140Z","created":"2017-03-18T11:01:36.140Z"},
+			{"_id":"58cd13b31af0c500010c5e0f","idTrip":2,"desc":"Sur le reef",
+			"Lon":-149.61927630007267,"Lat":-17.64295871824422,"mediaName":"tour8.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:02:11.886Z","created":"2017-03-18T11:02:11.886Z"},
+			{"_id":"58cd13df1af0c500010c5e10","idTrip":2,"desc":"Vue du lagon et de Moorea",
+			"Lon":-149.6119163185358,"Lat":-17.637907896985773,"mediaName":"tour9.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:02:55.735Z","created":"2017-03-18T11:02:55.735Z"},
+			{"_id":"58cd14251af0c500010c5e11","idTrip":2,"desc":"Beau couché de soleil",
+			"Lon":-149.61275316774845,"Lat":-17.63647646440436,"mediaName":"tour10.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:04:05.315Z","created":"2017-03-18T11:04:05.315Z"},
+			{"_id":"58cd14461af0c500010c5e12","idTrip":2,"desc":"plage de sable blanc du PK18",
+			"Lon":-149.59733247756958,"Lat":-17.659541589774925,"mediaName":"tour11.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:04:38.595Z","created":"2017-03-18T11:04:38.595Z"},
+			{"_id":"58cd14981af0c500010c5e14","idTrip":2,"desc":"Marae de Paea",
+			"Lon":-149.5866857841611,"Lat":-17.6754687092819,"mediaName":"tour12.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:06:00.800Z","created":"2017-03-18T11:06:00.800Z"},
+			{"_id":"58cd15401af0c500010c5e15","idTrip":2,"desc":"Plage de surf de Taharuu",
+			"Lon":-149.4796934723854,"Lat":-17.77181915319329,"mediaName":"tour13.jpg","idFB":1350503553,"__v":0,
+			"mediaDate":"2017-03-18T11:08:48.649Z","created":"2017-03-18T11:08:48.649Z"}
+			];
+			
+			var adresseServer = "http://91.134.142.192/media";
+
+			
+			///////////////////////////////////////////////////////////////////////////////////
+			// partie Google Map
+			
+			var map;
+			var mapCenterLat=-17.555138, mapCenterLng=-149.609086;
+
+			function initMap() 
+			{
+				map = new google.maps.Map(document.getElementById('map'), {
+					center: {lat:mapCenterLat,lng:mapCenterLng},
+					zoom: 10
+				});
+
+				//setMarkers( map );
+				
+				// Define a symbol using SVG path notation, with an opacity of 1.
+				var lineSymbol = {
+					path: 'M 0,-1 0,1',
+					strokeOpacity: 1,
+					scale: 3
+				};
+
+				var coords = [];
+				for( var i=0; i < dataDB.length; i++ ) {
+					coords.push( {lat:dataDB[i].Lat,lng:dataDB[i].Lon} );
+				}
+
+				// Create the polyline, passing the symbol in the 'icons' property.
+				// Give the line an opacity of 0.
+				// Repeat the symbol at intervals of 20 pixels to create the dashed effect.
+				var line = new google.maps.Polyline({
+					path: coords, //[{lat: initLat, lng: initLong}, {lat: initLat+0.1, lng: initLong+0.3}],
+					strokeOpacity: 0,
+					icons: [{
+					icon: lineSymbol,
+					offset: '0',
+					repeat: '20px'
+					}],
+					map: map
+				});	
+			}
+
+
+			var markerAvion;
+			var imageAvion;
+			var posAvion;
+			function setMarkers( map )
+			{
+				imageAvion = {
+					url: 'avion_NE.png',
+					size: new google.maps.Size(32, 32),
+					origin: new google.maps.Point(0, 0),
+					anchor: new google.maps.Point(16, 16)
+				};
+				markerAvion = new google.maps.Marker({
+				  position: {lat:mapCenterLat,lng:mapCenterLng},
+				  map: map,
+				  icon: imageAvion,
+				  title: "avion",
+				  zIndex: 0
+				});
+			}
+		</script>
+	
+		<div id="glRender"></div>
+	
+		<script src="js/three.js"></script>
+		<script>
+			// Our Javascript will go here.
+			
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, (window.innerWidth * 60 / 100) / (window.innerHeight / 2), 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth * 60 / 100, window.innerHeight / 2 );
+			<!-- document.body.appendChild( renderer.domElement );		// pour prendre tout l'ecran du navigateur!!	 -->
+			
+			// pour n'utiliser WebGL que dans un div limité !
+			container = document.getElementById( 'glRender' );
+			document.body.appendChild( container );
+			container.appendChild( renderer.domElement );
+
+			// on ajoute des objets dans la scene
+			<!-- var geometry = new THREE.BoxGeometry( 1, 1, 1 ); -->
+			<!-- var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } ); -->
+			<!-- var cube = new THREE.Mesh( geometry, material ); -->
+			<!-- scene.add( cube ); -->
+
+			var photoTexLoad = new THREE.TextureLoader();
+			photoTexLoad.crossOrigin = "";
+			photoTexLoad.load( adresseServer +"/"+ dataDB[0].mediaName, function(tex){
+			//photoTexLoad.load( 'test.jpg', function(tex){
+					matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
+					sprite = new THREE.Sprite( matPhoto );
+					var scale = 4;
+					var scaleX = tex.image.width * scale / tex.image.height;
+					sprite.scale.set( scaleX, scale, 2 );
+					sprite.position.set( 0, 0, 0.5 );
+					scene.add( sprite );
+				},
+				function () {},  // onProgress function
+				function ( error ) { console.log( error ); } // onError function
+			);			
+			
+			camera.position.z = 5;
+			
+			window.addEventListener( 'resize', onWindowResize, false );
+
+			function render() {
+				requestAnimationFrame( render );
+				<!-- cube.rotation.x += 0.1; -->
+				<!-- cube.rotation.y += 0.1; -->
+				renderer.render( scene, camera );
+			}
+			
+			function onWindowResize() {
+				if( window.innerWidth < 900 ){
+					document.getElementById("glRender").style.width = "90%";
+					camera.aspect = (window.innerWidth * 90 / 100) / (window.innerHeight / 2);
+					renderer.setSize( window.innerWidth * 90 / 100, window.innerHeight / 2 );
+					
+					document.getElementById("map").style.left = "5%";
+					document.getElementById("map").style.width = "90%";
+					document.getElementById("map").style.top = "60%";
+				} else {
+					document.getElementById("glRender").style.width = "60%";
+					camera.aspect = (window.innerWidth * 60 / 100) / (window.innerHeight / 2);
+					renderer.setSize( window.innerWidth * 60 / 100, window.innerHeight / 2 );
+					
+					document.getElementById("map").style.left = "70%";
+					document.getElementById("map").style.width = "25%";
+					document.getElementById("map").style.top = "50px";
+				}
+				camera.updateProjectionMatrix();
+				
+			}
+			
+			render();
+
+			setTimeout( onWindowResize, 10 );
+			
+		</script>
+		
+		<script>
+			function nextImage() {
+				//alert("Next !");
+			}
+			function prevImage() {
+				alert("Previous !");
+			}
+			function diaporama() {
+				alert("Launch Diaporama !");
+			}
+			function fullscreen() {
+				alert("Fullscreen !");
+			}
+			function toggleComment() {
+				alert("ToggleComment !");
+			}
+		</script>
+		
+		<div id="info">Description</div>
+		<div id="map"></div>
+		<div id="controles" >
+			
+			<img id="imgBtnCtrl" src="next.png" onclick="nextImage();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+			<img id="imgBtnCtrl" src="prev.png" onclick="prevImage();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+			<img id="imgBtnCtrl" src="diap.png" onclick="diaporama();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+			<img id="imgBtnCtrl" src="diap.png" onclick="fullscreen();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+			<img id="imgBtnCtrl" src="diap.png" onclick="toggleComment();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+		</div>		
+		
+	</body>
+</html>
