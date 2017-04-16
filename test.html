@@ -215,19 +215,24 @@
 
 			var photoTexLoad = new THREE.TextureLoader();
 			photoTexLoad.crossOrigin = "";
-			photoTexLoad.load( adresseServer +"/"+ dataDB[0].mediaName, function(tex){
-			//photoTexLoad.load( 'test.jpg', function(tex){
-					matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
-					sprite = new THREE.Sprite( matPhoto );
-					var scale = 4;
-					var scaleX = tex.image.width * scale / tex.image.height;
-					sprite.scale.set( scaleX, scale, 2 );
-					sprite.position.set( 0, 0, 0.5 );
-					scene.add( sprite );
-				},
-				function () {},  // onProgress function
-				function ( error ) { console.log( error ); } // onError function
-			);			
+			
+			function loadPic( num ) {
+				photoTexLoad.load( adresseServer +"/"+ dataDB[ num ].mediaName, function(tex){
+				//photoTexLoad.load( 'test.jpg', function(tex){
+						matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
+						sprite = new THREE.Sprite( matPhoto );
+						var scale = 4;
+						var scaleX = tex.image.width * scale / tex.image.height;
+						sprite.scale.set( scaleX, scale, 2 );
+						sprite.position.set( num * 20, 0, 0.5 );
+						scene.add( sprite );
+					},
+					function () {},  // onProgress function
+					function ( error ) { console.log( error ); } // onError function
+				);			
+			}
+			
+			loadPic( 0 );
 			
 			camera.position.z = 5;
 			
@@ -244,7 +249,7 @@
 				if( window.innerWidth < 900 ){
 					document.getElementById("glRender").style.width = "90%";
 					camera.aspect = (window.innerWidth * 90 / 100) / (window.innerHeight / 2);
-					renderer.setSize( window.innerWidth * 90 / 100, window.innerHeight / 2 );
+					renderer.setSize( window.innerWidth * 90 / 100 - 15, window.innerHeight / 2 );
 					
 					document.getElementById("map").style.left = "5%";
 					document.getElementById("map").style.width = "90%";
@@ -265,6 +270,30 @@
 			render();
 
 			setTimeout( onWindowResize, 10 );
+			
+			
+			
+			function loadAllFilesAsync( num ) {
+			
+				photoTexLoad.load( adresseServer +"/"+ dataDB[ num ].mediaName, function(tex){
+				//photoTexLoad.load( 'test.jpg', function(tex){
+						matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
+						sprite = new THREE.Sprite( matPhoto );
+						var scale = 4;
+						var scaleX = tex.image.width * scale / tex.image.height;
+						sprite.scale.set( scaleX, scale, 2 );
+						sprite.position.set( num * 20, 0, 0.5 );
+						scene.add( sprite );
+						
+						if( num < dataDB.length-1 ) setTimeout( loadAllFilesAsync, 50, num+1 );
+					},
+					function () {},  // onProgress function
+					function ( error ) { console.log( error ); } // onError function
+				);
+			}
+			
+			if( dataDB.length > 1 ) setTimeout( loadAllFilesAsync, 50, 1 );
+			
 			
 		</script>
 		
