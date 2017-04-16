@@ -129,7 +129,7 @@
 			// partie Google Map
 			
 			var map;
-			var mapCenterLat=-17.555138, mapCenterLng=-149.609086;
+			var mapCenterLat=dataDB[0].Lat, mapCenterLng=dataDB[0].Lon;
 
 			function initMap() 
 			{
@@ -138,7 +138,7 @@
 					zoom: 10
 				});
 
-				//setMarkers( map );
+				setMarkers( map );
 				
 				// Define a symbol using SVG path notation, with an opacity of 1.
 				var lineSymbol = {
@@ -187,6 +187,85 @@
 				  zIndex: 0
 				});
 			}
+			
+			
+			//////////////////////////////////////////////////////////////////
+			/////////////   le mouvement de la carte d'un point à l'autre
+
+			var panPath = [];   // An array of points the current panning action will use
+			var panQueue = [];  // An array of subsequent panTo actions to take
+			var STEPS = 50;     // The number of steps that each panTo action will undergo
+			var waitTime = 10;
+
+			var panAvPath = [];
+
+			function panTo(newLat, newLng) {
+			  if (panPath.length > 0) {
+				// We are already panning...queue this up for next move
+				panQueue.push([newLat, newLng]);
+			  } else {
+				// Lets compute the points we'll use
+				panPath.push("LAZY SYNCRONIZED LOCK");  // make length non-zero - 'release' this before calling setTimeout
+				var curLat = map.getCenter().lat();
+				var curLng = map.getCenter().lng();
+				var dLat = (newLat - curLat)/STEPS;
+				var dLng = (newLng - curLng)/STEPS;
+				
+				// afficher la bonne icone en fonction de la direction du mouvement
+				var llAvion = markerAvion.getPosition();
+				
+				var daLat = (newLat - llAvion.lat())/STEPS;
+				var daLng = (newLng - llAvion.lng())/STEPS;
+				if( daLat >= 0 ){
+					if( daLng >= 0 ) imageAvion.url = 'avion_NE.png';  //document.avion.src = 'avion_NE.png';
+					else imageAvion.url = 'avion_NW.png';
+				} else {
+					if( daLng >= 0 ) imageAvion.url = 'avion_SE.png';
+					else imageAvion.url = 'avion_SW.png';
+				}
+				markerAvion.setIcon( imageAvion );
+
+				// on calcule les positions de l'avion durant l'animation : l'avion peut avoir une trajectoire differente de la camera si l'utilisateur a bougé la carte
+				for( var i=0; i < STEPS; i++ ) {
+					panAvPath.push([llAvion.lat() + daLat * i, llAvion.lng() + daLng * i]);
+				}
+				panAvPath.push([newLat, newLng]);
+
+				
+				for (var i=0; i < STEPS; i++) {
+				  panPath.push([curLat + dLat * i, curLng + dLng * i]);
+				}
+				panPath.push([newLat, newLng]);
+				panPath.shift();      // LAZY SYNCRONIZED LOCK
+				setTimeout(doPan, waitTime);
+				
+				mapCenterLat = newLat;
+				mapCenterLng = newLng;
+			  }
+			}
+
+			function doPan() 
+			{
+				var next = panPath.shift();
+				if (next != null) {
+					// Continue our current pan action
+					map.panTo( new google.maps.LatLng(next[0], next[1]));
+
+					var avNext = panAvPath.shift();
+					markerAvion.setPosition( new google.maps.LatLng( avNext[0], avNext[1] ) );
+
+					setTimeout(doPan, waitTime );
+				} else {
+					// We are finished with this pan - check if there are any queue'd up locations to pan to 
+					var queued = panQueue.shift();
+					if (queued != null) {
+					  panTo(queued[0], queued[1]);
+					}
+				}
+			}
+
+			//////////////////////////////////////////////////////////////////			
+			
 		</script>
 	
 		<div id="glRender"></div>
@@ -221,7 +300,7 @@
 				//photoTexLoad.load( 'test.jpg', function(tex){
 						matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
 						sprite = new THREE.Sprite( matPhoto );
-						var scale = 4;
+						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
 						sprite.position.set( num * 20, 0, 0.5 );
@@ -249,7 +328,7 @@
 				if( window.innerWidth < 900 ){
 					document.getElementById("glRender").style.width = "90%";
 					camera.aspect = (window.innerWidth * 90 / 100) / (window.innerHeight / 2);
-					renderer.setSize( window.innerWidth * 90 / 100 - 15, window.innerHeight / 2 );
+					renderer.setSize( window.innerWidth * 90 / 100 - 14, window.innerHeight / 2 );
 					
 					document.getElementById("map").style.left = "5%";
 					document.getElementById("map").style.width = "90%";
@@ -274,36 +353,51 @@
 			
 			
 			function loadAllFilesAsync( num ) {
+				if( num >= dataDB.length ) return;
 			
 				photoTexLoad.load( adresseServer +"/"+ dataDB[ num ].mediaName, function(tex){
 				//photoTexLoad.load( 'test.jpg', function(tex){
 						matPhoto = new THREE.SpriteMaterial( { map: tex, color: 0xffffff } );
 						sprite = new THREE.Sprite( matPhoto );
-						var scale = 4;
+						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
 						sprite.position.set( num * 20, 0, 0.5 );
 						scene.add( sprite );
 						
-						if( num < dataDB.length-1 ) setTimeout( loadAllFilesAsync, 50, num+1 );
+						setTimeout( loadAllFilesAsync, 50, num+1 );
 					},
 					function () {},  // onProgress function
 					function ( error ) { console.log( error ); } // onError function
 				);
 			}
 			
-			if( dataDB.length > 1 ) setTimeout( loadAllFilesAsync, 50, 1 );
+			setTimeout( loadAllFilesAsync, 50, 1 );
 			
 			
-		</script>
-		
-		<script>
+			///////////////////////////////////////////////////////////////////////////////
+			// fonctions de l'interface
+			
+			var imgShown = 0;
+			
 			function nextImage() {
-				//alert("Next !");
+				if( imgShown >= dataDB.length-1 ) return;
+				imgShown = imgShown + 1;
+				panTo( dataDB[imgShown].Lat, dataDB[imgShown].Lon );
+				camera.position.set( imgShown*20, 0, 5 );
+				camera.up = new THREE.Vector3( 0, 1, 0 );
+				camera.lookAt( new THREE.Vector3( imgShown*20, 0, 0.5 ) );
 			}
+			
 			function prevImage() {
-				alert("Previous !");
+				if( imgShown <= 0 ) return;
+				imgShown = imgShown - 1;
+				panTo( dataDB[imgShown].Lat, dataDB[imgShown].Lon );
+				camera.position.set( imgShown*20, 0, 5 );
+				camera.up = new THREE.Vector3( 0, 1, 0 );
+				camera.lookAt( new THREE.Vector3( imgShown*20, 0, 0.5 ) );
 			}
+			
 			function diaporama() {
 				alert("Launch Diaporama !");
 			}
@@ -313,6 +407,8 @@
 			function toggleComment() {
 				alert("ToggleComment !");
 			}
+			
+			
 		</script>
 		
 		<div id="info">Description</div>
