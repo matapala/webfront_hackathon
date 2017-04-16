@@ -33,7 +33,7 @@
 				left: 70%;
 				min-width: 200px;
 				width: 25%;
-				min-height: 200px;
+				min-height: 250px;
 				z-index: 1;
 				height: 50%;
 				border: 10px solid #38272C;
@@ -42,9 +42,9 @@
 				position:absolute;
 				top: 50px;
 				left: 5%;
-				min-width: 200px;
+				min-width: 400px;
 				width: 60%;
-				min-height: 200px;
+				min-height: 250px;
 				z-index: 1;
 				height: 50%;
 				border: 10px solid #38272C;
@@ -53,11 +53,11 @@
 				position:absolute;
 				top: 60px;
 				left: 6%;
-				min-width: 100px;
-				width: 100px;
-				min-height: 400px;
+				min-width: 50px;
+				width: 50px;
+				min-height: 250px;
 				z-index: 2;
-				height: 400px;
+				height: 250px;
 				opacity: 0.7;
 			}			
 			#imgBtnCtrl {
@@ -275,10 +275,12 @@
 			// Our Javascript will go here.
 			
 			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, (window.innerWidth * 60 / 100) / (window.innerHeight / 2), 0.1, 1000 );
+			var winHei = window.innerHeight / 2;
+			if( winHei < 250 ) winHei = 250;
+			var camera = new THREE.PerspectiveCamera( 75, (window.innerWidth * 60 / 100) / winHei, 0.1, 1000 );
 
 			var renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth * 60 / 100, window.innerHeight / 2 );
+			renderer.setSize( window.innerWidth * 60 / 100, winHei );
 			<!-- document.body.appendChild( renderer.domElement );		// pour prendre tout l'ecran du navigateur!!	 -->
 			
 			// pour n'utiliser WebGL que dans un div limité !
@@ -303,7 +305,7 @@
 						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
-						sprite.position.set( num * 20, 0, 0.5 );
+						sprite.position.set( num * 10, 0, 0.5 );
 						scene.add( sprite );
 					},
 					function () {},  // onProgress function
@@ -325,18 +327,21 @@
 			}
 			
 			function onWindowResize() {
+				winHei = window.innerHeight / 2;
+				if( winHei < 250 ) winHei = 250;
+				
 				if( window.innerWidth < 900 ){
 					document.getElementById("glRender").style.width = "90%";
-					camera.aspect = (window.innerWidth * 90 / 100) / (window.innerHeight / 2);
-					renderer.setSize( window.innerWidth * 90 / 100 - 14, window.innerHeight / 2 );
+					camera.aspect = (window.innerWidth * 90 / 100) / winHei;
+					renderer.setSize( window.innerWidth * 90 / 100 - 14, winHei );
 					
 					document.getElementById("map").style.left = "5%";
 					document.getElementById("map").style.width = "90%";
 					document.getElementById("map").style.top = "60%";
 				} else {
 					document.getElementById("glRender").style.width = "60%";
-					camera.aspect = (window.innerWidth * 60 / 100) / (window.innerHeight / 2);
-					renderer.setSize( window.innerWidth * 60 / 100, window.innerHeight / 2 );
+					camera.aspect = (window.innerWidth * 60 / 100) / winHei;
+					renderer.setSize( window.innerWidth * 60 / 100, winHei );
 					
 					document.getElementById("map").style.left = "70%";
 					document.getElementById("map").style.width = "25%";
@@ -362,7 +367,7 @@
 						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
-						sprite.position.set( num * 20, 0, 0.5 );
+						sprite.position.set( num * 10, 0, 0.5 );
 						scene.add( sprite );
 						
 						setTimeout( loadAllFilesAsync, 50, num+1 );
@@ -380,27 +385,38 @@
 			
 			var imgShown = 0;
 			
+			function showEtape( n ) {
+				imgShown = n;
+				panTo( dataDB[n].Lat, dataDB[n].Lon );
+				camera.position.set( n*10, 0, 5 );
+				camera.up = new THREE.Vector3( 0, 1, 0 );
+				camera.lookAt( new THREE.Vector3( n*10, 0, 0.5 ) );
+			}
+			
 			function nextImage() {
 				if( imgShown >= dataDB.length-1 ) return;
-				imgShown = imgShown + 1;
-				panTo( dataDB[imgShown].Lat, dataDB[imgShown].Lon );
-				camera.position.set( imgShown*20, 0, 5 );
-				camera.up = new THREE.Vector3( 0, 1, 0 );
-				camera.lookAt( new THREE.Vector3( imgShown*20, 0, 0.5 ) );
+				showEtape( imgShown+1 );
 			}
 			
 			function prevImage() {
 				if( imgShown <= 0 ) return;
-				imgShown = imgShown - 1;
-				panTo( dataDB[imgShown].Lat, dataDB[imgShown].Lon );
-				camera.position.set( imgShown*20, 0, 5 );
-				camera.up = new THREE.Vector3( 0, 1, 0 );
-				camera.lookAt( new THREE.Vector3( imgShown*20, 0, 0.5 ) );
+				showEtape( imgShown-1 );
+			}
+			
+			var diaporamaSpeed = 3000;
+			function diaporamaRunning()
+			{
+				if( imgShown >= dataDB.length ) return;
+				showEtape( imgShown );
+				imgShown++;
+				setTimeout( diaporamaRunning, diaporamaSpeed );
 			}
 			
 			function diaporama() {
-				alert("Launch Diaporama !");
+				imgShown = 0;
+				setTimeout( diaporamaRunning, 1 );
 			}
+			
 			function fullscreen() {
 				alert("Fullscreen !");
 			}
