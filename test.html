@@ -69,6 +69,20 @@
 				outline: none;
 				box-shadow: none;
 			}			
+			#commentaires {
+				position:absolute;
+				background-color:#000;
+				color:#00f0f0;
+				top: 65px;
+				left: 10%;
+				min-width: 200px;
+				width: 55%;
+				min-height: 20px;
+				height: 20px;
+				z-index: 2;
+				opacity: 0.7;
+				text-align: center;
+			}			
 		</style>
 	</head>
 	<body>
@@ -272,7 +286,7 @@
 	
 		<script src="js/three.js"></script>
 		<script>
-			// Our Javascript will go here.
+			var spacePic = 20;
 			
 			var scene = new THREE.Scene();
 			var winHei = window.innerHeight / 2;
@@ -305,7 +319,7 @@
 						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
-						sprite.position.set( num * 10, 0, 0.5 );
+						sprite.position.set( num * spacePic, 0, 0.5 );
 						scene.add( sprite );
 					},
 					function () {},  // onProgress function
@@ -367,7 +381,7 @@
 						var scale = 5;
 						var scaleX = tex.image.width * scale / tex.image.height;
 						sprite.scale.set( scaleX, scale, 2 );
-						sprite.position.set( num * 10, 0, 0.5 );
+						sprite.position.set( num * spacePic, 0, 0.5 );
 						scene.add( sprite );
 						
 						setTimeout( loadAllFilesAsync, 50, num+1 );
@@ -384,13 +398,19 @@
 			// fonctions de l'interface
 			
 			var imgShown = 0;
+			var showComments = true;
 			
 			function showEtape( n ) {
+				var imgDsc = document.getElementById('commentaires');
+				imgDsc.innerHTML = dataDB[n].desc;
+				if( showComments ) imgDsc.style.display = "block";
+				else imgDsc.style.display = "none";
+				
 				imgShown = n;
 				panTo( dataDB[n].Lat, dataDB[n].Lon );
-				camera.position.set( n*10, 0, 5 );
+				camera.position.set( n*spacePic, 0, 5 );
 				camera.up = new THREE.Vector3( 0, 1, 0 );
-				camera.lookAt( new THREE.Vector3( n*10, 0, 0.5 ) );
+				camera.lookAt( new THREE.Vector3( n*spacePic, 0, 0.5 ) );
 			}
 			
 			function nextImage() {
@@ -421,22 +441,25 @@
 				alert("Fullscreen !");
 			}
 			function toggleComment() {
-				alert("ToggleComment !");
+				showComments = !showComments;
+				setTimeout( showEtape, 10, imgShown );
 			}
 			
+			
+			setTimeout( showEtape, 10, 0 );
 			
 		</script>
 		
 		<div id="info">Description</div>
 		<div id="map"></div>
 		<div id="controles" >
-			
 			<img id="imgBtnCtrl" src="next.png" onclick="nextImage();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
 			<img id="imgBtnCtrl" src="prev.png" onclick="prevImage();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
 			<img id="imgBtnCtrl" src="diap.png" onclick="diaporama();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
 			<img id="imgBtnCtrl" src="diap.png" onclick="fullscreen();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
-			<img id="imgBtnCtrl" src="diap.png" onclick="toggleComment();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
+			<img id="imgBtnCtrl" src="comm.png" onclick="toggleComment();" onmouseover="this.style.opacity = 0.8; document.getElementById('controles').style.opacity=0.9;" onmouseout="this.style.opacity = 0.2; document.getElementById('controles').style.opacity=0.7;" ></br>
 		</div>		
+		<div id="commentaires"></div>
 		
 	</body>
 </html>
